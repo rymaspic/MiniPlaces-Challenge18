@@ -6,16 +6,23 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.optim.lr_scheduler
 torch.backends.cudnn.benchmark=True
+import matplotlib.pyplot as plt
 import numpy as np
 
 import dataset
 from models.AlexNet import *
 from models.ResNet import *
 
+train_top1_loss_list = []
+train_top5_loss_list = []
+val_top1_loss_list = []
+val_top5_loss_list = []
+index = 0
+
 def run():
     # Parameters
     num_epochs = 10
-    output_period = 1
+    output_period = 100
     batch_size = 100
 
     # setup the device for running
@@ -69,38 +76,81 @@ def run():
 
         # TODO: Calculate classification error and Top-5 Error
         # on training and validation datasets here
-        val_loss = 0.0
-        top5loss = 0.0
+        train_top1_loss = 0.0
+        train_top5_loss = 0.0
+        for batch_num, (inputs, labels) in enumerate(train_loader, 1):
+            inputs = inputs.to(device)
+            labels = labels.to(device)
+            # print(labels.shape)
+
+            outputs = model(inputs)
+            # outputs = outputs.numpy
+            _, cls = torch.max(outputs, dim=1)
+            # print(torch.max(outputs,dim=1))
+            # cls = cls + 1
+            train_top1_loss = train_top1_loss + torch.nonzero(cls - labels).shape[0] / labels.numel()
+
+            _, cls = torch.topk(outputs, dim=1, k=5)
+            # cls = cls + 1
+            train_top5_loss = train_top5_loss + (
+            1 - (cls.numel() - torch.nonzero(cls - labels.view(-1, 1)).shape[0]) / labels.numel())
+
+            if batch_num % output_period == 0:
+                print('[%d:%.2f] Train_Top1_loss: %.3f Train_Top5_loss: %.3f' % (
+                    epoch, batch_num * 1.0 / num_train_batches,
+                    train_top1_loss / output_period,
+                    train_top5_loss / output_period
+                ))
+                # train_top1_loss_list.append(train_top1_loss / output_period)
+                # train_top5_loss_list.append(train_top5_loss / output_period)
+                # index = index + 1
+                train_top1_loss = 0.0
+                train_top5_loss = 0.0
+                gc.collect()
+
+
+
+        val_top1_loss = 0.0
+        val_top5_loss = 0.0
         for batch_num, (inputs, labels) in enumerate(val_loader, 1):
             inputs = inputs.to(device)
             labels = labels.to(device)
-            print(labels.shape)
+            #print(labels.shape)
 
             outputs = model(inputs)
-            #outputs = outputs.numpy()
+            #outputs = outputs.numpy
             _,cls = torch.max(outputs,dim=1)
-            cls = cls + 1
-            val_loss = val_loss + torch.nonzero(cls-labels).shape[0]/labels.numel()
+            #print(torch.max(outputs,dim=1))
+            #cls = cls + 1
+            val_top1_loss = val_top1_loss + torch.nonzero(cls-labels).shape[0]/labels.numel()
 
             _,cls = torch.topk(outputs,dim=1,k=5)
-            cls = cls + 1
-            top5loss = top5loss + (1 - (cls.numel()-torch.nonzero(cls-labels.view(-1,1)).shape[0])/labels.numel())
-
+            #cls = cls + 1
+            val_top5_loss = val_top5_loss + (1 - (cls.numel()-torch.nonzero(cls-labels.view(-1,1)).shape[0])/labels.numel())
 
             if batch_num % output_period == 0:
-                print('[%d:%.2f] classfication_loss: %.3f top5_loss: %.3f' % (
+                print('[%d:%.2f] Val_Top1_loss: %.3f Val_Top5_loss: %.3f' % (
                     epoch, batch_num*1.0/num_val_batches,
-                    val_loss/output_period,
-                    top5loss/output_period
+                    val_top1_loss/output_period,
+                    val_top5_loss/output_period
                     ))
-                val_loss = 0.0
-                top5loss = 0.0
-                gc.collect()
+                val_top1_loss_list.append(train_top1_loss / output_period)
+                val_top5_loss_list.append(train_top5_loss / output_period)
 
+                val_top1_loss = 0.0
+                val_top5_loss = 0.0
+                gc.collect()
 
         gc.collect()
         epoch += 1
 
 print('Starting training')
 run()
+for i in range(index):
+    plt.plot(i,val_top1_loss_list[i],label = 'val-top1')
+    plt.plot(i,val_top5_loss_list[i],label = 'val-top5')
+    plt.plot(i, train_top1_loss_list[i], label='train-top1')
+    plt.plot(i, train_top5_loss_list[i], label='train-top5')
+plt.show()
+
 print('Training terminated')
