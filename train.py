@@ -18,6 +18,7 @@ train_top5 = []
 val_top1 = []
 val_top5 = []
 
+
 def run():
     # Parameters
     num_epochs = 10
