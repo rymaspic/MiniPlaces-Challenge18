@@ -13,7 +13,7 @@ import dataset
 from models.AlexNet import *
 from models.ResNet import *
 
-def run(optimizer, name):
+def run(setting, name):
     train_top1 = []
     train_top5 = []
     val_top1 = []
@@ -36,7 +36,7 @@ def run(optimizer, name):
     criterion = nn.CrossEntropyLoss().to(device)
     # TODO: optimizer is currently unoptimized
     # there's a lot of room for improvement/different optimizers
-    #optimizer = optim.Adam(model.parameters(), lr=0.0001)
+    optimizer = setting[0](model.parameters(), lr=setting[1])
 
     epoch = 1
     while epoch <= num_epochs:
@@ -133,10 +133,10 @@ def run(optimizer, name):
     plt.clf()
 
 
-optimizers = [optim.SGD(model.parameters(), lr=1e-1),
-              optim.SGD(model.parameters(), lr=1e-2),
-              optim.SGD(model.parameters(), lr=1e-3),
-              optim.Adam(model.parameters(), lr=1e-2)]
+optimizers = [(optim.SGD, 1e-2),
+              (optim.SGD, 1e-2),
+              (optim.SGD, 1e-3),
+              (optim.Adam, 1e-2),]
 names = ["SGD_1e-1", "SGD_1e-2", "SGD_1e-3", "Adam_1e-2"]
 
 for opt, name in zip(optimizers, names):
