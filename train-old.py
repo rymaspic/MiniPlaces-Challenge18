@@ -13,10 +13,11 @@ import dataset
 from models.AlexNet import *
 from models.ResNet import *
 
-train_top1 = []
-train_top5 = []
-val_top1 = []
-val_top5 = []
+train_top1_loss_list = []
+train_top5_loss_list = []
+val_top1_loss_list = []
+val_top5_loss_list = []
+index = 0
 
 def run():
     # Parameters
@@ -36,7 +37,7 @@ def run():
     criterion = nn.CrossEntropyLoss().to(device)
     # TODO: optimizer is currently unoptimized
     # there's a lot of room for improvement/different optimizers
-    optimizer = optim.SGD(model.parameters(), lr=1e-2)
+    optimizer = optim.SGD(model.parameters(), lr=1e-3)
     #optimizer = optim.Adam(model.parameters(), lr=0.0001)
 
     epoch = 1
@@ -49,12 +50,12 @@ def run():
         for batch_num, (inputs, labels) in enumerate(train_loader, 1):
             inputs = inputs.to(device)
             labels = labels.to(device)
-            #print(labels.shape)
-            #print(inputs.shape)
+            print(labels.shape)
+            print(inputs.shape)
 
             optimizer.zero_grad()
             outputs = model(inputs)
-            #print(outputs)
+            print(outputs)
             loss = criterion(outputs, labels)
             loss.backward()
 
@@ -72,8 +73,6 @@ def run():
         gc.collect()
         # save after every epoch
         torch.save(model.state_dict(), "models/model.%d" % epoch)
-        
-        model.eval()
 
         # TODO: Calculate classification error and Top-5 Error
         # on training and validation datasets here
@@ -143,15 +142,10 @@ def run():
                 gc.collect()
 
         gc.collect()
-        
-        train_top1.append(sign_train_top1)
-        train_top5.append(sign_train_top5)
-        val_top1.append(sign_val_top1)
-        val_top5.append(sign_val_top5)
-        print("Train_Top1_loss in Epoch" + str(epoch) + ": " + str(sign_train_top1))
-        print("Train_Top5_loss in Epoch" + str(epoch) + ": " + str(sign_train_top5))
-        print("Val_Top1_loss in Epoch" + str(epoch) + ": " + str(sign_val_top1))
-        print("Val_Top5_loss in Epoch" + str(epoch) + ": " + str(sign_val_top5))
+        print("Train_Top1_loss in Epoch" + str(epoch) + ": " + sign_train_top1)
+        print("Train_Top1_loss in Epoch" + str(epoch) + ": " + sign_train_top5)
+        print("Val_Top1_loss in Epoch" + str(epoch) + ": " + sign_val_top1)
+        print("Val_Top1_loss in Epoch" + str(epoch) + ": " + sign_val_top5)
 
         epoch += 1
 
