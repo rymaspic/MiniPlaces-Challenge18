@@ -73,9 +73,7 @@ def run():
             labels = labels.to(device)
             #print(labels.shape)
             #print(inputs.shape)
-            if (batch_num == 100):
-                break
-                
+                            
             optimizer.zero_grad()
             outputs = model(inputs)
             #print(outputs)
@@ -92,7 +90,9 @@ def run():
                 ))
                 running_loss = 0.0
                 gc.collect()
-
+            if batch_num == 100:
+                break
+            
         gc.collect()
         # save after every epoch
         torch.save(model.state_dict(), "models/model.%d" % epoch)
@@ -100,13 +100,10 @@ def run():
         model.eval()
 
         # TODO: Calculate classification error and Top-5 Error
-        def calcHelper(name, k):
-            return calcTopKError(eval(name+"_loader"), k, name)
-
-        train_top1_err = calcHelper("train", 1)
-        train_top5_err = calcHelper("train", 5)
-        val_top1_err =  calcHelper("val", 1)
-        val_top5_err = calcHelper("val", 5)
+        train_top1_err = calcTopKError(train_loader, 1, "train")
+        train_top5_err = calcHelper(train_loader, 5, "train")
+        val_top1_err =  calcHelper(val_loader, 1, "val")
+        val_top5_err = calcHelper(val_loader, 5, "val")
 
         gc.collect()
 
