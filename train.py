@@ -21,7 +21,7 @@ def run():
 
     # Parameters
     num_epochs = 10
-    output_period = 100
+    output_period = 10
     batch_size = 100
 
     # setup the device for running
@@ -68,8 +68,8 @@ def run():
                 ))
                 running_loss = 0.0
                 gc.collect()
-            # if batch_num == 100:
-            #     break
+            if batch_num == 100:
+                break
 
         gc.collect()
         # save after every epoch
@@ -87,7 +87,7 @@ def run():
 
                 _,cls = torch.topk(outputs,dim=1,k=k)
                 batch_topk_err = (1 - (cls.numel()-torch.nonzero(cls-labels.view(-1,1)).shape[0])/labels.numel())
-                epoch_topk_err = epoch_topk_err * ((batch_num-1) / batch_num)
+                epoch_topk_err = epoch_topk_err * ((batch_num-1) / batch_num) \
                                 + batch_topk_err / batch_num
 
                 if batch_num % output_period == 0:
@@ -98,6 +98,8 @@ def run():
                     #     epoch_topk_err/batch_num
                     # ))
                     gc.collect()
+                if batch_num == 100:
+                    break
 
             return epoch_topk_err
 
@@ -121,10 +123,13 @@ def run():
         epoch += 1
 
     x_idx = range(num_epochs)
+    plt.xlabel("Epoch")
+    plt.ylabel("Error")
     plt.plot(x_idx, train_top1, label="train_top1")
-    plt.plot(x_idx, train_top5, label="train_top5")
+    plt.plot(x_idx, train_top5, label="train_top5", linestyle="--")
     plt.plot(x_idx, val_top1, label="val_top1")
-    plt.plot(x_idx, val_top5, label="val_top5")
+    plt.plot(x_idx, val_top5, label="val_top5", linestyle="--")
+    plt.legend()
     plt.savefig("res.pdf")
 
 print('Starting training')
