@@ -84,6 +84,7 @@ def run():
             for batch_num, (inputs, labels) in enumerate(loader, 1):
                 inputs = inputs.to(device)
                 labels = labels.to(device)
+                outputs = model(inputs)
 
                 _,cls = torch.topk(outputs,dim=1,k=k)
                 batch_topk_err = (1 - (cls.numel()-torch.nonzero(cls-labels.view(-1,1)).shape[0])/labels.numel())
