@@ -68,8 +68,8 @@ def run():
                 ))
                 running_loss = 0.0
                 gc.collect()
-            if batch_num == 100:
-                break
+            # if batch_num == 100:
+            #     break
 
         gc.collect()
         # save after every epoch
@@ -87,7 +87,8 @@ def run():
 
                 _,cls = torch.topk(outputs,dim=1,k=k)
                 batch_topk_err = (1 - (cls.numel()-torch.nonzero(cls-labels.view(-1,1)).shape[0])/labels.numel())
-                epoch_topk_err += batch_topk_err
+                epoch_topk_err = epoch_topk_err * ((batch_num-1) / batch_num)
+                                + batch_topk_err / batch_num
 
                 if batch_num % output_period == 0:
                     # print('[%d:%.2f] %s_Topk_error: %.3f' % (
