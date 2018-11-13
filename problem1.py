@@ -111,7 +111,7 @@ def run(optimizer, name):
         train_top5.append(train_top5_err)
         val_top1.append(val_top1_err)
         val_top5.append(val_top5_err)
-        
+
         print("\n\n\n")
         print("Train_Top1_loss in Epoch" + str(epoch) + ": " + str(train_top1_err))
         print("Train_Top5_loss in Epoch" + str(epoch) + ": " + str(train_top5_err))
@@ -130,6 +130,7 @@ def run(optimizer, name):
     plt.plot(x_idx, val_top5, label="val_top5", linestyle="--")
     plt.legend()
     plt.savefig(f"res_{name}.pdf")
+    plt.clf()
 
 
 optimizers = [optim.SGD(model.parameters(), lr=1e-1),
