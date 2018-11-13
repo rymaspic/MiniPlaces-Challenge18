@@ -13,28 +13,6 @@ import dataset
 from models.AlexNet import *
 from models.ResNet import *
 
-def calcTopKError(loader, k, name):
-    epoch_topk_err = 0.0
-
-    for batch_num, (inputs, labels) in enumerate(loader, 1):
-        inputs = inputs.to(device)
-        labels = labels.to(device)
-
-        _,cls = torch.topk(outputs,dim=1,k=k)
-        batch_topk_err = (1 - (cls.numel()-torch.nonzero(cls-labels.view(-1,1)).shape[0])/labels.numel())
-        epoch_topk_err += batch_topk_err
-
-        if batch_num % output_period == 0:
-            # print('[%d:%.2f] %s_Topk_error: %.3f' % (
-            #     epoch,
-            #     batch_num*1.0/num_val_batches,
-            #     name,
-            #     epoch_topk_err/batch_num
-            # ))
-            gc.collect()
-
-    return epoch_topk_err
-
 def run():
     train_top1 = []
     train_top5 = []
@@ -73,7 +51,7 @@ def run():
             labels = labels.to(device)
             #print(labels.shape)
             #print(inputs.shape)
-                            
+
             optimizer.zero_grad()
             outputs = model(inputs)
             #print(outputs)
@@ -92,13 +70,36 @@ def run():
                 gc.collect()
             if batch_num == 100:
                 break
-            
+
         gc.collect()
         # save after every epoch
         torch.save(model.state_dict(), "models/model.%d" % epoch)
 
         model.eval()
 
+        # a helper function to calc topk error
+        def calcTopKError(loader, k, name):
+            epoch_topk_err = 0.0
+
+            for batch_num, (inputs, labels) in enumerate(loader, 1):
+                inputs = inputs.to(device)
+                labels = labels.to(device)
+
+                _,cls = torch.topk(outputs,dim=1,k=k)
+                batch_topk_err = (1 - (cls.numel()-torch.nonzero(cls-labels.view(-1,1)).shape[0])/labels.numel())
+                epoch_topk_err += batch_topk_err
+
+                if batch_num % output_period == 0:
+                    # print('[%d:%.2f] %s_Topk_error: %.3f' % (
+                    #     epoch,
+                    #     batch_num*1.0/num_val_batches,
+                    #     name,
+                    #     epoch_topk_err/batch_num
+                    # ))
+                    gc.collect()
+
+            return epoch_topk_err
+            
         # TODO: Calculate classification error and Top-5 Error
         train_top1_err = calcTopKError(train_loader, 1, "train")
         train_top5_err = calcHelper(train_loader, 5, "train")
