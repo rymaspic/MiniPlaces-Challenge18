@@ -99,12 +99,12 @@ def run():
                     gc.collect()
 
             return epoch_topk_err
-            
+
         # TODO: Calculate classification error and Top-5 Error
         train_top1_err = calcTopKError(train_loader, 1, "train")
-        train_top5_err = calcHelper(train_loader, 5, "train")
-        val_top1_err =  calcHelper(val_loader, 1, "val")
-        val_top5_err = calcHelper(val_loader, 5, "val")
+        train_top5_err = calcTopKError(train_loader, 5, "train")
+        val_top1_err =  calcTopKError(val_loader, 1, "val")
+        val_top5_err = calcTopKError(val_loader, 5, "val")
 
         gc.collect()
 
