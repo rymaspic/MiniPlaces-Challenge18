@@ -13,16 +13,15 @@ import dataset
 from models.AlexNet import *
 from models.ResNet import *
 
-train_top1 = []
-train_top5 = []
-val_top1 = []
-val_top5 = []
-
-
 def run():
+    train_top1 = []
+    train_top5 = []
+    val_top1 = []
+    val_top5 = []
+
     # Parameters
     num_epochs = 10
-    output_period = 100
+    output_period = 10
     batch_size = 100
 
     # setup the device for running
@@ -45,7 +44,7 @@ def run():
         running_loss = 0.0
         for param_group in optimizer.param_groups:
             print('Current learning rate: ' + str(param_group['lr']))
-        model.train()
+            model.train()
 
         for batch_num, (inputs, labels) in enumerate(train_loader, 1):
             inputs = inputs.to(device)
@@ -66,95 +65,72 @@ def run():
                 print('[%d:%.2f] loss: %.3f' % (
                     epoch, batch_num*1.0/num_train_batches,
                     running_loss/output_period
-                    ))
+                ))
                 running_loss = 0.0
                 gc.collect()
+            if batch_num == 100:
+                break
 
         gc.collect()
         # save after every epoch
         torch.save(model.state_dict(), "models/model.%d" % epoch)
-        
+
         model.eval()
 
+        # a helper function to calc topk error
+        def calcTopKError(loader, k, name):
+            epoch_topk_err = 0.0
+
+            for batch_num, (inputs, labels) in enumerate(loader, 1):
+                inputs = inputs.to(device)
+                labels = labels.to(device)
+
+                _,cls = torch.topk(outputs,dim=1,k=k)
+                batch_topk_err = (1 - (cls.numel()-torch.nonzero(cls-labels.view(-1,1)).shape[0])/labels.numel())
+                epoch_topk_err = epoch_topk_err * ((batch_num-1) / batch_num) \
+                                + batch_topk_err / batch_num
+
+                if batch_num % output_period == 0:
+                    # print('[%d:%.2f] %s_Topk_error: %.3f' % (
+                    #     epoch,
+                    #     batch_num*1.0/num_val_batches,
+                    #     name,
+                    #     epoch_topk_err/batch_num
+                    # ))
+                    gc.collect()
+                if batch_num == 100:
+                    break
+
+            return epoch_topk_err
+
         # TODO: Calculate classification error and Top-5 Error
-        # on training and validation datasets here
-        train_top1_loss = 0.0
-        train_top5_loss = 0.0
-
-        for batch_num, (inputs, labels) in enumerate(train_loader, 1):
-
-            inputs = inputs.to(device)
-            labels = labels.to(device)
-            # print(labels.shape)
-
-            outputs = model(inputs)
-            # outputs = outputs.numpy
-            _, cls = torch.max(outputs, dim=1)
-            # print(torch.max(outputs,dim=1))
-            # cls = cls + 1
-            train_top1_loss = train_top1_loss + torch.nonzero(cls - labels).shape[0] / labels.numel()
-
-            _, cls = torch.topk(outputs, dim=1, k=5)
-            # cls = cls + 1
-            train_top5_loss = train_top5_loss + (
-            1 - (cls.numel() - torch.nonzero(cls - labels.view(-1, 1)).shape[0]) / labels.numel())
-
-            if batch_num % output_period == 0:
-                print('[%d:%.2f] Train_Top1_loss: %.3f Train_Top5_loss: %.3f' % (
-                    epoch, batch_num * 1.0 / num_train_batches,
-                    train_top1_loss / output_period,
-                    train_top5_loss / output_period
-                ))
-
-                sign_train_top1 = train_top1_loss / output_period
-                sign_train_top5 = train_top5_loss / output_period
-
-                train_top1_loss = 0.0
-                train_top5_loss = 0.0
-                gc.collect()
-
-        val_top1_loss = 0.0
-        val_top5_loss = 0.0
-        for batch_num, (inputs, labels) in enumerate(val_loader, 1):
-            inputs = inputs.to(device)
-            labels = labels.to(device)
-            #print(labels.shape)
-
-            outputs = model(inputs)
-            #outputs = outputs.numpy
-            _,cls = torch.max(outputs,dim=1)
-            #print(torch.max(outputs,dim=1))
-            val_top1_loss = val_top1_loss + torch.nonzero(cls-labels).shape[0]/labels.numel()
-
-            _,cls = torch.topk(outputs,dim=1,k=5)
-            val_top5_loss = val_top5_loss + (1 - (cls.numel()-torch.nonzero(cls-labels.view(-1,1)).shape[0])/labels.numel())
-
-            if batch_num % output_period == 0:
-                print('[%d:%.2f] Val_Top1_loss: %.3f Val_Top5_loss: %.3f' % (
-                    epoch, batch_num*1.0/num_val_batches,
-                    val_top1_loss/output_period,
-                    val_top5_loss/output_period
-                    ))
-
-                sign_val_top1 = val_top1_loss / output_period
-                sign_val_top5 = val_top5_loss / output_period
-
-                val_top1_loss = 0.0
-                val_top5_loss = 0.0
-                gc.collect()
+        train_top1_err = calcTopKError(train_loader, 1, "train")
+        train_top5_err = calcTopKError(train_loader, 5, "train")
+        val_top1_err =  calcTopKError(val_loader, 1, "val")
+        val_top5_err = calcTopKError(val_loader, 5, "val")
 
         gc.collect()
-        
-        train_top1.append(sign_train_top1)
-        train_top5.append(sign_train_top5)
-        val_top1.append(sign_val_top1)
-        val_top5.append(sign_val_top5)
-        print("Train_Top1_loss in Epoch" + str(epoch) + ": " + str(sign_train_top1))
-        print("Train_Top5_loss in Epoch" + str(epoch) + ": " + str(sign_train_top5))
-        print("Val_Top1_loss in Epoch" + str(epoch) + ": " + str(sign_val_top1))
-        print("Val_Top5_loss in Epoch" + str(epoch) + ": " + str(sign_val_top5))
+
+        train_top1.append(train_top1_err)
+        train_top5.append(train_top5_err)
+        val_top1.append(val_top1_err)
+        val_top5.append(val_top5_err)
+        print("Train_Top1_loss in Epoch" + str(epoch) + ": " + str(train_top1_err))
+        print("Train_Top5_loss in Epoch" + str(epoch) + ": " + str(train_top5_err))
+        print("Val_Top1_loss in Epoch" + str(epoch) + ": " + str(val_top1_err))
+        print("Val_Top5_loss in Epoch" + str(epoch) + ": " + str(val_top5_err))
 
         epoch += 1
+
+    x_idx = range(num_epochs)
+    plt.xlabel("Epoch")
+    plt.ylabel("Error")
+    plt.plot(x_idx, train_top1, label="train_top1")
+    plt.plot(x_idx, train_top5, label="train_top5", linestyle="--")
+    plt.plot(x_idx, val_top1, label="val_top1")
+    plt.plot(x_idx, val_top5, label="val_top5", linestyle="--")
+    plt.legend()
+    plt.savefig("res.pdf")
 
 print('Starting training')
 run()
