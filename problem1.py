@@ -133,7 +133,7 @@ def run(setting, name):
     plt.clf()
 
 
-optimizers = [(optim.SGD, 1e-2),
+optimizers = [(optim.SGD, 1e-1),
               (optim.SGD, 1e-2),
               (optim.SGD, 1e-3),
               (optim.Adam, 1e-2),]
