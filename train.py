@@ -20,7 +20,7 @@ def run():
     val_top5 = []
 
     # Parameters
-    num_epochs = 10
+    num_epochs = 20
     output_period = 10
     batch_size = 100
 
@@ -36,7 +36,7 @@ def run():
     criterion = nn.CrossEntropyLoss().to(device)
     # TODO: optimizer is currently unoptimized
     # there's a lot of room for improvement/different optimizers
-    optimizer = optim.SGD(model.parameters(), lr=1e-2)
+    optimizer = optim.Adam(model.parameters(), lr=1e-1)
     #optimizer = optim.Adam(model.parameters(), lr=0.0001)
 
     epoch = 1
@@ -68,12 +68,10 @@ def run():
                 ))
                 running_loss = 0.0
                 gc.collect()
-            if batch_num == 100:
-                break
 
         gc.collect()
         # save after every epoch
-        torch.save(model.state_dict(), "models/model.%d" % epoch)
+        torch.save(model.state_dict(), "models/model_Pro2.%d" % epoch)
 
         model.eval()
 
@@ -99,8 +97,7 @@ def run():
                     #     epoch_topk_err/batch_num
                     # ))
                     gc.collect()
-                if batch_num == 100:
-                    break
+
 
             return epoch_topk_err
 
@@ -131,7 +128,7 @@ def run():
     plt.plot(x_idx, val_top1, label="val_top1")
     plt.plot(x_idx, val_top5, label="val_top5", linestyle="--")
     plt.legend()
-    plt.savefig("res.pdf")
+    plt.savefig("res_Pro2.pdf")
 
 print('Starting training')
 run()

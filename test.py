@@ -14,7 +14,7 @@ def load_model(model_name):
     """load the pre-trained model"""
     if model_name == 'ResNet':
         model = resnet_18()
-        model_path = './models/resnet.pt'
+        model_path = './models/model.10'
     elif model_name == 'AlexNet':
         model = alexnet()
         model_path = './models/alexnet.pt'
