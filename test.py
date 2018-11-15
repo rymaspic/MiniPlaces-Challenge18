@@ -15,7 +15,7 @@ def load_model(model_name):
     """load the pre-trained model"""
     if model_name == 'ResNet':
         model = resnet_18()
-        model_path = './models/resnet.pt'
+        model_path = './models/model_Pro2.20'
     elif model_name == 'AlexNet':
         model = alexnet()
         model_path = './models/alexnet.pt'
@@ -23,7 +23,7 @@ def load_model(model_name):
         raise NotImplementedError(model_name + ' is not implemented here')
 
     checkpoint = torch.load(model_path, map_location='cpu')
-    #model.load_state_dict(checkpoint['net_dict'])
+    model.load_state_dict(checkpoint)
     return model
 
 def load_imagepaths_from_folder(folder):
@@ -32,7 +32,8 @@ def load_imagepaths_from_folder(folder):
         path = os.path.join(folder,filename)
         if path is not None:
             paths.append(path)
-    return paths
+
+    return sorted(paths)
 
 
 def construct_transformer():
@@ -59,7 +60,7 @@ def main():
     transformer = construct_transformer()
     paths = load_imagepaths_from_folder('data/test/999/')
     # load the image
-    f = open("hhh.txt", "w")  # opens file with name of "test.txt"
+    f = open("model3.txt", "w")  # opens file with name of "test.txt"
     for path in paths:
         image = imread(path)
         image = transformer(image)
@@ -75,10 +76,10 @@ def main():
             output = output + str(i.item())
         a = output.split("/")
         output = a[1] + "/" + a[3]
-        print(output)
         f.write(output + "\n")
         #os.system("echo %s > text1/output_file.txt" %output)
+        x = input()
+    
     f.close()
 
 main()
-
