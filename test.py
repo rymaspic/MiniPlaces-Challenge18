@@ -2,11 +2,10 @@ from __future__ import print_function
 from __future__ import division
 
 import torch
-import torchvision.transforms as transforms
 import os
 
 from scipy.misc import imread, imresize
-
+from torchvision import transforms
 from models.AlexNet import *
 from models.ResNet import *
 
@@ -33,21 +32,14 @@ def load_imagepaths_from_folder(folder):
         if path is not None:
             paths.append(path)
 
-    return sorted(paths)
+    paths.sort()
+    return paths
 
 
-def construct_transformer():
-    """construct transformer for images"""
-    mean = [0.45486851, 0.43632515, 0.40461355]
-    std = [0.26440552, 0.26142306, 0.27963778]
-    transformer = transforms.Compose([
-        transforms.ToPILImage(),
-        transforms.Resize(144),
-        transforms.CenterCrop(128),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=mean, std=std),
+base_transform = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize([0.5]*3, [0.5]*3)
     ])
-    return transformer
 
 def main():
     # setup the device for running
@@ -56,14 +48,13 @@ def main():
     model = load_model('ResNet')
     model.to(device)
     model.eval()
-    # set image transformer
-    transformer = construct_transformer()
+
     paths = load_imagepaths_from_folder('data/test/999/')
     # load the image
     f = open("model3.txt", "w")  # opens file with name of "test.txt"
     for path in paths:
         image = imread(path)
-        image = transformer(image)
+        image = base_transform(image)
         image = image.view(-1, 3, 128, 128)
         image = image.to(device)
         # run the forward process
