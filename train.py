@@ -13,6 +13,21 @@ import dataset
 from models.AlexNet import *
 from models.ResNet import *
 
+def load_model(model_name):
+    """load the pre-trained model"""
+    if model_name == 'ResNet':
+        model = resnet_18()
+        model_path = './models/model_Pro2.20'
+    elif model_name == 'AlexNet':
+        model = alexnet()
+        model_path = './models/alexnet.pt'
+    else:
+        raise NotImplementedError(model_name + ' is not implemented here')
+
+    checkpoint = torch.load(model_path, map_location='cpu')
+    model.load_state_dict(checkpoint)
+    return model
+
 def run():
     train_top1 = []
     train_top5 = []
@@ -26,7 +41,7 @@ def run():
 
     # setup the device for running
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    model = resnet_18()
+    model = load_model('ResNet')
     model = model.to(device)
 
     train_loader, val_loader = dataset.get_data_loaders(batch_size)
@@ -36,7 +51,7 @@ def run():
     criterion = nn.CrossEntropyLoss().to(device)
     # TODO: optimizer is currently unoptimized
     # there's a lot of room for improvement/different optimizers
-    optimizer = optim.Adam(model.parameters(), lr=1e-1)
+    optimizer = optim.Adam(model.parameters(), lr=1e-2)
     #optimizer = optim.Adam(model.parameters(), lr=0.0001)
 
     epoch = 1
@@ -71,7 +86,7 @@ def run():
 
         gc.collect()
         # save after every epoch
-        torch.save(model.state_dict(), "models/model_Pro2.%d" % epoch)
+        torch.save(model.state_dict(), "models/model_Pro2.%d" % epoch+20)
 
         model.eval()
 
@@ -128,7 +143,7 @@ def run():
     plt.plot(x_idx, val_top1, label="val_top1")
     plt.plot(x_idx, val_top5, label="val_top5", linestyle="--")
     plt.legend()
-    plt.savefig("res_Pro2.pdf")
+    plt.savefig("res_Pro2_ADAM_NO_DROP_RE.pdf")
 
 print('Starting training')
 run()
