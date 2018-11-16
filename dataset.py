@@ -1,5 +1,6 @@
 import torch
 from torchvision import datasets, transforms
+import PIL
 
 data_root = './data/'
 train_root = data_root + 'train'
@@ -7,6 +8,9 @@ val_root = data_root + 'val'
 test_root = data_root + 'test'
 
 base_transform = transforms.Compose([
+    transforms.RandomHorizontalFlip(),
+    transforms.RandomRotation(20, resample=PIL.Image.BILINEAR),
+    transforms.ColorJitter(hue=.05, saturation=.05),
     transforms.ToTensor(),
     transforms.Normalize([0.5]*3, [0.5]*3)
     ])
