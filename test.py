@@ -41,6 +41,14 @@ base_transform = transforms.Compose([
     transforms.Normalize([0.5]*3, [0.5]*3)
     ])
 
+def get_id(num):
+    num = str(num)
+    if num == '0':
+        return int(num)
+    if len(num) == 1:
+        return int(num[0]) * 11 - 10
+    return int(num[0]) * 11 + int(num[1]) - 9
+
 def main():
     # setup the device for running
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -51,7 +59,7 @@ def main():
 
     paths = load_imagepaths_from_folder('data/test/999/')
     # load the image
-    f = open("model3.txt", "w")  # opens file with name of "test.txt"
+    f = open("OneMoreSecond.txt", "w")  # opens file with name of "test.txt"
     for path in paths:
         image = imread(path)
         image = base_transform(image)
@@ -64,13 +72,14 @@ def main():
         output = path
         for i in cls.data[0]:
             output = output + " "
-            output = output + str(i.item())
+            x = get_id(i.item())
+            output = output + str(x)
         a = output.split("/")
         output = a[1] + "/" + a[3]
+        print(output)
         f.write(output + "\n")
         #os.system("echo %s > text1/output_file.txt" %output)
-        x = input()
-    
+
     f.close()
 
 main()
