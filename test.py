@@ -4,6 +4,7 @@ from __future__ import division
 import torch
 import os
 
+import dataset
 from scipy.misc import imread, imresize
 from torchvision import transforms
 from models.AlexNet import *
@@ -41,22 +42,24 @@ base_transform = transforms.Compose([
     transforms.Normalize([0.5]*3, [0.5]*3)
     ])
 
-def get_id(num):
-    num = str(num)
-    if num == '0':
-        return int(num)
-    if len(num) == 1:
-        return int(num[0]) * 11 - 10
-    return int(num[0]) * 11 + int(num[1]) - 9
+# def get_id(num):
+#     num = str(num)
+#     if num == '0':
+#         return int(num)
+#     if len(num) == 1:
+#         return int(num[0]) * 11 - 10
+#     return int(num[0]) * 11 + int(num[1]) - 9
 
 def main():
     # setup the device for running
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    train_loader, val_loader = dataset.get_data_loaders(100)
+    classes = val_loader.dataset.classes
     # load model and set to evaluation mode
     model = load_model('ResNet')
     model.to(device)
     model.eval()
-
+    
     paths = load_imagepaths_from_folder('data/test/999/')
     # load the image
     f = open("OneMoreSecond.txt", "w")  # opens file with name of "test.txt"
@@ -72,7 +75,7 @@ def main():
         output = path
         for i in cls.data[0]:
             output = output + " "
-            x = get_id(i.item())
+            x = classes[i.item()]
             output = output + str(x)
         a = output.split("/")
         output = a[1] + "/" + a[3]
@@ -83,3 +86,4 @@ def main():
     f.close()
 
 main()
+
