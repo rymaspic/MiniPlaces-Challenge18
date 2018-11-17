@@ -8,6 +8,11 @@ val_root = data_root + 'val'
 test_root = data_root + 'test'
 
 base_transform = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize([0.5]*3, [0.5]*3)
+    ])
+
+aug_transform = transforms.Compose([
     transforms.RandomHorizontalFlip(),
     transforms.RandomRotation(20, resample=PIL.Image.BILINEAR),
     transforms.ColorJitter(hue=.05, saturation=.05),
@@ -15,7 +20,7 @@ base_transform = transforms.Compose([
     transforms.Normalize([0.5]*3, [0.5]*3)
     ])
 
-train_dataset = datasets.ImageFolder(root=train_root, transform=base_transform)
+train_dataset = datasets.ImageFolder(root=train_root, transform=aug_transform)
 val_dataset = datasets.ImageFolder(root=val_root, transform=base_transform)
 test_dataset = datasets.ImageFolder(root=test_root, transform=base_transform)
 
