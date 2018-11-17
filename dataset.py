@@ -1,5 +1,6 @@
 import torch
 from torchvision import datasets, transforms
+import PIL
 
 data_root = './data/'
 train_root = data_root + 'train'
@@ -11,7 +12,15 @@ base_transform = transforms.Compose([
     transforms.Normalize([0.5]*3, [0.5]*3)
     ])
 
-train_dataset = datasets.ImageFolder(root=train_root, transform=base_transform)
+aug_transform = transforms.Compose([
+    transforms.RandomHorizontalFlip(),
+    transforms.RandomRotation(20, resample=PIL.Image.BILINEAR),
+    transforms.ColorJitter(hue=.05, saturation=.05),
+    transforms.ToTensor(),
+    transforms.Normalize([0.5]*3, [0.5]*3)
+    ])
+
+train_dataset = datasets.ImageFolder(root=train_root, transform=aug_transform)
 val_dataset = datasets.ImageFolder(root=val_root, transform=base_transform)
 test_dataset = datasets.ImageFolder(root=test_root, transform=base_transform)
 
