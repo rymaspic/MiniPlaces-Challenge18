@@ -1,6 +1,6 @@
 # MiniPlaces-Challenge18
 
-An image classification task of MIT 6.819/6.869 Advanced Computer Vision class.
+An image classification task of MIT 6.819/6.869 Advances in Computer Vision class.
 
 Basic Objective: improve the model performance to achieve at least 30% error rate.
 
